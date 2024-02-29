@@ -8,17 +8,51 @@
     <artifactId>decrypt-wechat-dat-img</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <java.version>11</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--这里的javafx版本有新有旧，可以去官网上查看最新的-->
+        <javafx.version>17.0.1</javafx.version>
+        <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+    </properties>
+
 
     <dependencies>
+        <!--javafx的依赖  -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-core</artifactId>
+            <version>5.8.24</version>
         </dependency>
+
+
     </dependencies>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>nexus</id>
+            <name>nexus-snapshot-repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
     <build>
         <!--maven插件-->
         <plugins>
+
             <!--jdk编译插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -37,13 +71,56 @@
                     <!--这部分可有可无,加上的话则直接生成可运行jar包-->
                     <archive>
                         <manifest>
-                            <mainClass>io.github.cctyl.Main</mainClass>
+                            <mainClass>io.github.cctyl.FxApplication</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.6.6</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 启动类 -->
+                            <mainClass>io.github.cctyl.FxApplication</mainClass>
+                            <!-- 绑定自定义JRE路径-->
+                            <bundleJre>true</bundleJre>
+                            <jrePath>C:\Users\tyl\soft\jdk-11.0.19\jre</jrePath>
+                            <generateInstaller>true</generateInstaller>
+                            <administratorRequired>false</administratorRequired>
+                            <!-- 操作系统-->
+                            <platform>windows</platform>
+                            <copyDependencies>true</copyDependencies>
+                            <!-- 名称与版本-->
+                            <displayName>AmtHardwareTest</displayName>
+                            <name>AmtHardwareTest</name>
+                            <version>1.0</version>
+                            <!-- 手动引入额外资源-->
+                            <!--<additionalResources>
+                                <additionalResource>D:\Item\GD_AmtHardwareTest1.0\datas</additionalResource>
+                                <additionalResource>D:\Item\GD_AmtHardwareTest1.0\lib</additionalResource>
+                            </additionalResources>-->
+                            <!--详细参数配置-->
+                            <!--           <winConfig>
+                                           <icoFile>D:\Item\GD_AmtHardwareTest1.0\src\main\ico\app.ico</icoFile>
+                                           <generateSetup>false</generateSetup>
+                                           <generateMsi>false</generateMsi>
+                                           <generateMsm>false</generateMsm>
+                                       </winConfig>-->
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
 

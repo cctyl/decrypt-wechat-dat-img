@@ -1,20 +1,48 @@
 package io.github.cctyl;
 
+import cn.hutool.core.io.FileUtil;
 import io.github.cctyl.domain.dto.Info;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
-public class Main {
-    public static void main(String[] args) {
+public class DatUtil {
+
+
+    public static void start(String path) {
+
+        List<File> files = scanFiles(path);
+        File file = files.get(0);
+        final byte key = getKey(file);
+        System.out.println("获得key：" + Integer.toBinaryString(key));
+        files.forEach(f -> decrypt(f, key));
+
+        System.out.println("解码完成，共解码"+files.size()+"个文件");
 
     }
 
-    public void decrypt(String fileName) {
+    private static byte getKey(File file) {
 
-        final byte key = 10;
+        try (FileInputStream fileInputStream = new FileInputStream(file);) {
+            byte[] buf = new byte[8];
+            fileInputStream.read(buf);
+
+            byte key = getKey(buf).getKey();
+            return key;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static List<File> scanFiles(String path) {
+        return FileUtil.loopFiles(path, pathname -> pathname.getName().endsWith(".dat"));
+    }
+
+    private static void decrypt(File sourceFile, final byte key) {
+
         final String unDecryptSuffix = ".dat";
         final byte[] buffer = new byte[2048];
 
@@ -23,15 +51,14 @@ public class Main {
         FileOutputStream outputStream = null;
         FileInputStream fileInputStream = null;
         try {
-            File file = new File(fileName);
-            int i = file.getName().lastIndexOf(".dat");
+            int i = sourceFile.getName().lastIndexOf(".dat");
             if (i == -1) {
 
                 System.out.println("解码失败");
                 return;
             }
 
-            fileInputStream = new FileInputStream(file);
+            fileInputStream = new FileInputStream(sourceFile);
 
             byte[] buf = new byte[8];
 
@@ -42,23 +69,23 @@ public class Main {
 
             fileSuffix = getFileSuffix(key, buf);
 
-            substring = file.getName().substring(0, i);
+            substring = sourceFile.getName().substring(0, i);
             if (unDecryptSuffix.equals(fileSuffix)) {
-                System.out.println(file.getName() + "解码失败");
+                System.out.println(sourceFile.getName() + "解码失败");
                 return;
             }
 
-
-            outputStream = new FileOutputStream(new File(file.getParentFile().getAbsolutePath(), +File.pathSeparatorChar + substring + fileSuffix));
+            outputStream = new FileOutputStream(new File(sourceFile.getParentFile().getAbsolutePath(), +File.pathSeparatorChar + substring + fileSuffix));
+            decrypt(buffer, len, key);
             outputStream.write(buffer, 0, len);
             while ((len = fileInputStream.read(buffer)) != -1) {
+                decrypt(buffer, len, key);
                 outputStream.write(buffer, 0, len);
             }
             System.out.println(substring + fileSuffix + "解码成功");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-
             if (fileInputStream != null) {
                 try {
                     fileInputStream.close();
@@ -66,8 +93,6 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-
-
             if (outputStream != null) {
                 try {
                     outputStream.close();
@@ -75,22 +100,26 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-
         }
 
 
     }
 
-    public Info getKey(byte[] buf) {
+    private static void decrypt(byte[] buffer, int len, byte key) {
+
+        for (int i = 0; i < len; i++) {
+            buffer[i] = (byte) (buffer[i] ^ key);
+        }
+    }
+
+    private static Info getKey(byte[] buf) {
         Info info = new Info();
         info.setKey((byte) -1);
         for (int key = 0x01; key < 0xFF; key++) {
             byte key1 = (byte) key;
             byte[] ints = convertData(buf, key1);
             String fileSuffix = getFileSuffix(ints);
-            if (
-                    !".dat".equals(fileSuffix)
-            ) {
+            if (!".dat".equals(fileSuffix)) {
                 info.setSuffix(fileSuffix);
                 info.setKey(key1);
                 break;
@@ -99,12 +128,12 @@ public class Main {
         return info;
     }
 
-    public String getFileSuffix(byte key, byte[] buf) {
+    private static String getFileSuffix(byte key, byte[] buf) {
         byte[] ints = convertData(buf, key);
         return getFileSuffix(ints);
     }
 
-    private byte[] convertData(byte[] buf, byte key) {
+    private static byte[] convertData(byte[] buf, byte key) {
 
         byte[] result = new byte[buf.length];
         for (int i = 0; i < buf.length; i++) {
@@ -115,7 +144,7 @@ public class Main {
     }
 
 
-    public String getFileSuffix(byte[] data) {
+    private static String getFileSuffix(byte[] data) {
 
 
         switch (data[0]) {
