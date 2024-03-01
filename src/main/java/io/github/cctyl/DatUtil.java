@@ -8,19 +8,32 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class DatUtil {
 
 
-    public static void start(String path) {
+    public static StopbilityThread<File> start(String path) {
+
 
         List<File> files = scanFiles(path);
         File file = files.get(0);
         final byte key = getKey(file);
-        System.out.println("获得key：" + Integer.toBinaryString(key));
-        files.forEach(f -> decrypt(f, key));
 
-        System.out.println("解码完成，共解码"+files.size()+"个文件");
+        LogTool.log("获得key：" + Integer.toBinaryString(key));
+
+        return new StopbilityThread<>(files, f -> {
+            decrypt(f, key);
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, (i) -> {
+            LogTool.log("执行完毕,共解码"+i+"条数据");
+        }
+        );
 
     }
 
@@ -54,7 +67,7 @@ public class DatUtil {
             int i = sourceFile.getName().lastIndexOf(".dat");
             if (i == -1) {
 
-                System.out.println("解码失败");
+                LogTool.log("解码失败");
                 return;
             }
 
@@ -71,7 +84,7 @@ public class DatUtil {
 
             substring = sourceFile.getName().substring(0, i);
             if (unDecryptSuffix.equals(fileSuffix)) {
-                System.out.println(sourceFile.getName() + "解码失败");
+                LogTool.log(sourceFile.getName() + "解码失败");
                 return;
             }
 
@@ -82,7 +95,7 @@ public class DatUtil {
                 decrypt(buffer, len, key);
                 outputStream.write(buffer, 0, len);
             }
-            System.out.println(substring + fileSuffix + "解码成功");
+            LogTool.log(substring + fileSuffix + "解码成功");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
