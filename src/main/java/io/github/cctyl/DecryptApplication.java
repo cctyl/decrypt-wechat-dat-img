@@ -41,7 +41,7 @@ public class DecryptApplication extends Application {
         stop.setPrefWidth(100);
         stop.setPrefHeight(100);
 
-        hBox.setMargin(stop,new Insets(0,0,0,20));
+        HBox.setMargin(stop,new Insets(0,0,0,20));
 
         hBox.getChildren().addAll(btOpen,stop);
         hBox.setAlignment(Pos.CENTER);
@@ -69,15 +69,12 @@ public class DecryptApplication extends Application {
         stop.setOnMouseClicked(event -> {
             thread.stop();
             LogTool.log("解码完成");
+            LogTool.log("github地址：https://github.com/cctyl/decrypt-wechat-dat-img");
         });
 
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                System.out.println("我被关闭了");
-                LogTool.shutdown();
-                System.exit(0);
-            }
+        stage.setOnCloseRequest(event -> {
+            LogTool.shutdown();
+            System.exit(0);
         });
         stage.setScene(scene);
         stage.show();
