@@ -29,9 +29,23 @@ public class LogTool {
 
         msgTaskPool.submit(() -> {
             while (true){
-                String take = mq.take();
-                Platform.runLater(() ->   console.setText(take));
+                String take = null;
+                try {
+                    take = mq.take();
+                    String finalTake = take;
+                    Platform.runLater(() ->   console.setText(finalTake));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+
             }
         });
+    }
+
+    public static void shutdown() {
+
+        msgPutPool.shutdownNow();
+        msgTaskPool.shutdownNow();
     }
 }

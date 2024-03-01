@@ -1,6 +1,7 @@
 package io.github.cctyl;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.*;
 
@@ -69,7 +71,14 @@ public class DecryptApplication extends Application {
             LogTool.log("解码完成");
         });
 
-
+        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                System.out.println("我被关闭了");
+                LogTool.shutdown();
+                System.exit(0);
+            }
+        });
         stage.setScene(scene);
         stage.show();
     }
